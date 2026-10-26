@@ -1,5 +1,14 @@
 import { useState } from "react";
-import { MapPin, CalendarDays, Heart, Wallet, Sparkles, ArrowRight, ShieldCheck, Globe2 } from "lucide-react";
+import {
+  MapPin,
+  CalendarDays,
+  Heart,
+  Wallet,
+  Sparkles,
+  ArrowRight,
+  ShieldCheck,
+  Globe2,
+} from "lucide-react";
 import { generateTrip, saveTrip } from "../api/trips";
 import { TripMeta, ItineraryTimeline } from "../components/ItineraryDisplay";
 import PlaneLoader from "../components/PlaneLoader";
@@ -33,6 +42,58 @@ function Planner() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [saveStatus, setSaveStatus] = useState(null);
+
+  const [locationResults, setLocationResults] = useState([]);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationError, setLocationError] = useState("");
+
+  const searchLocations = async () => {
+    const query = formData.destination.trim();
+
+    if (query.length < 3) {
+      setLocationError("Enter at least 3 characters.");
+      setLocationResults([]);
+      return;
+    }
+
+    setLocationLoading(true);
+    setLocationError("");
+    setLocationResults([]);
+
+    try {
+      const response = await fetch(
+        `http://localhost:8000/location-search?q=${encodeURIComponent(query)}`,
+      );
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Location search failed.");
+      }
+
+      setLocationResults(data);
+
+      if (data.length === 0) {
+        setLocationError("No locations found. Try another search.");
+      }
+    } catch (err) {
+      setLocationError(
+        err.message === "Failed to fetch"
+          ? "Cannot connect to the backend. Make sure it is running."
+          : err.message || "Unable to search locations.",
+      );
+    } finally {
+      setLocationLoading(false);
+    }
+  };
+
+  const selectLocation = (place) => {
+    setFormData((previous) => ({
+      ...previous,
+      destination: place.name,
+    }));
+    setLocationResults([]);
+    setLocationError("");
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -77,17 +138,60 @@ function Planner() {
       {/* DECORATIVE BACKGROUND LAYER — all very low opacity, purely ambient */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-24 -left-16 w-80 h-80 bg-primary/20 rounded-full blur-3xl animate-aurora" />
-        <div className="absolute top-40 -right-20 w-96 h-96 bg-secondary/20 rounded-full blur-3xl animate-aurora" style={{ animationDelay: "3s" }} />
+        <div
+          className="absolute top-40 -right-20 w-96 h-96 bg-secondary/20 rounded-full blur-3xl animate-aurora"
+          style={{ animationDelay: "3s" }}
+        />
 
-        <svg className="absolute top-10 right-10 w-40 h-40 text-primary/10 animate-spin-slow" viewBox="0 0 100 100" fill="none">
-          <circle cx="50" cy="50" r="46" stroke="currentColor" strokeWidth="1.5" />
-          <circle cx="50" cy="50" r="30" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" />
-          <line x1="50" y1="4" x2="50" y2="18" stroke="currentColor" strokeWidth="2" />
-          <line x1="50" y1="82" x2="50" y2="96" stroke="currentColor" strokeWidth="2" />
+        <svg
+          className="absolute top-10 right-10 w-40 h-40 text-primary/10 animate-spin-slow"
+          viewBox="0 0 100 100"
+          fill="none"
+        >
+          <circle
+            cx="50"
+            cy="50"
+            r="46"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+          <circle
+            cx="50"
+            cy="50"
+            r="30"
+            stroke="currentColor"
+            strokeWidth="1"
+            strokeDasharray="4 4"
+          />
+          <line
+            x1="50"
+            y1="4"
+            x2="50"
+            y2="18"
+            stroke="currentColor"
+            strokeWidth="2"
+          />
+          <line
+            x1="50"
+            y1="82"
+            x2="50"
+            y2="96"
+            stroke="currentColor"
+            strokeWidth="2"
+          />
         </svg>
 
-        <svg className="absolute top-1/3 left-0 w-full h-40 text-primary/10" viewBox="0 0 800 100" fill="none">
-          <path d="M0,60 C200,10 400,110 800,40" stroke="currentColor" strokeWidth="2" strokeDasharray="6 6" />
+        <svg
+          className="absolute top-1/3 left-0 w-full h-40 text-primary/10"
+          viewBox="0 0 800 100"
+          fill="none"
+        >
+          <path
+            d="M0,60 C200,10 400,110 800,40"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeDasharray="6 6"
+          />
         </svg>
 
         {[MapPin, MapPin, MapPin].map((Icon, i) => (
@@ -107,7 +211,11 @@ function Planner() {
           <span
             key={i}
             className="absolute w-1.5 h-1.5 bg-secondary/40 rounded-full animate-particle"
-            style={{ left: `${15 + i * 14}%`, bottom: "10%", animationDelay: `${i * 1.1}s` }}
+            style={{
+              left: `${15 + i * 14}%`,
+              bottom: "10%",
+              animationDelay: `${i * 1.1}s`,
+            }}
           />
         ))}
       </div>
@@ -118,7 +226,9 @@ function Planner() {
           <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-widest uppercase text-primary bg-sage/50 px-4 py-2 rounded-full mb-5">
             <Sparkles size={14} /> AI Powered
           </span>
-          <h1 className="text-4xl font-display font-semibold text-ink mb-3">AI Trip Planner</h1>
+          <h1 className="text-4xl font-display font-semibold text-ink mb-3">
+            AI Trip Planner
+          </h1>
           <p className="text-ink/60 max-w-md mx-auto">
             Plan your perfect journey in seconds. Tell us your preferences and
             we'll build your itinerary.
@@ -134,23 +244,76 @@ function Planner() {
             className="bg-white/70 backdrop-blur-xl border border-white/60 rounded-3xl shadow-2xl p-8 space-y-5"
           >
             <div className="relative">
-              <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/60" />
               <label className="block text-xs font-semibold text-ink/50 uppercase tracking-wide mb-1.5 ml-1">
                 Destination
               </label>
-              <input
-                type="text"
-                name="destination"
-                value={formData.destination}
-                onChange={handleChange}
-                required
-                placeholder="e.g. Kyoto, Japan"
-                className="w-full bg-white/80 border border-ink/10 rounded-xl pl-11 pr-4 py-3 text-sm text-ink shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-              />
+
+              <div className="flex gap-2">
+                <div className="relative min-w-0 flex-1">
+                  <MapPin
+                    size={18}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/60"
+                  />
+                  <input
+                    type="text"
+                    name="destination"
+                    value={formData.destination}
+                    onChange={(event) => {
+                      handleChange(event);
+                      setLocationResults([]);
+                      setLocationError("");
+                    }}
+                    required
+                    placeholder="e.g. Kyoto, Japan"
+                    className="w-full bg-white/80 border border-ink/10 rounded-xl pl-11 pr-4 py-3 text-sm text-ink shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={searchLocations}
+                  disabled={locationLoading}
+                  className="shrink-0 rounded-xl bg-primary px-4 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {locationLoading ? "Searching..." : "Search"}
+                </button>
+              </div>
+
+              {locationError && (
+                <p role="status" className="mt-2 text-sm text-red-600">
+                  {locationError}
+                </p>
+              )}
+
+              {locationResults.length > 0 && (
+                <div className="mt-2 overflow-hidden rounded-xl border border-ink/10 bg-white shadow-lg">
+                  {locationResults.map((place, index) => (
+                    <button
+                      type="button"
+                      key={`${place.latitude}-${place.longitude}-${index}`}
+                      onClick={() => selectLocation(place)}
+                      className="block w-full border-b border-ink/5 px-4 py-3 text-left text-sm text-ink last:border-b-0 hover:bg-primary/5"
+                    >
+                      <span className="block break-words">{place.name}</span>
+                      <span className="mt-1 block text-xs text-ink/50">
+                        {place.latitude.toFixed(4)},{" "}
+                        {place.longitude.toFixed(4)}
+                      </span>
+                    </button>
+                  ))}
+
+                  <p className="border-t border-ink/5 px-4 py-2 text-xs text-ink/50">
+                    Location data © OpenStreetMap contributors
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="relative">
-              <CalendarDays size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/60" />
+              <CalendarDays
+                size={18}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/60"
+              />
               <label className="block text-xs font-semibold text-ink/50 uppercase tracking-wide mb-1.5 ml-1">
                 Number of Days
               </label>
@@ -168,7 +331,10 @@ function Planner() {
             </div>
 
             <div className="relative">
-              <Heart size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/60" />
+              <Heart
+                size={18}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/60"
+              />
               <label className="block text-xs font-semibold text-ink/50 uppercase tracking-wide mb-1.5 ml-1">
                 Interests
               </label>
@@ -184,7 +350,10 @@ function Planner() {
             </div>
 
             <div className="relative">
-              <Wallet size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/60" />
+              <Wallet
+                size={18}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/60"
+              />
               <label className="block text-xs font-semibold text-ink/50 uppercase tracking-wide mb-1.5 ml-1">
                 Budget
               </label>
@@ -208,7 +377,12 @@ function Planner() {
               <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/25 to-transparent" />
               <span className="relative flex items-center justify-center gap-2">
                 {loading ? "Generating..." : "Generate Itinerary"}
-                {!loading && <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />}
+                {!loading && (
+                  <ArrowRight
+                    size={18}
+                    className="transition-transform group-hover:translate-x-1"
+                  />
+                )}
               </span>
             </button>
           </form>
@@ -236,11 +410,14 @@ function Planner() {
               >
                 {saveStatus === "saving" && "Saving..."}
                 {saveStatus === "saved" && "✓ Saved"}
-                {(saveStatus === null || saveStatus === "error") && "Save This Trip"}
+                {(saveStatus === null || saveStatus === "error") &&
+                  "Save This Trip"}
               </button>
 
               {saveStatus === "error" && (
-                <p className="text-red-500 mt-2 text-sm">Failed to save trip.</p>
+                <p className="text-red-500 mt-2 text-sm">
+                  Failed to save trip.
+                </p>
               )}
             </div>
           </div>
@@ -257,8 +434,12 @@ function Planner() {
                 <div className="bg-primary/10 text-primary rounded-full p-2.5 w-fit mb-4">
                   <perk.icon size={18} />
                 </div>
-                <h3 className="font-semibold text-ink text-sm mb-2">{perk.title}</h3>
-                <p className="text-ink/60 text-sm leading-relaxed">{perk.text}</p>
+                <h3 className="font-semibold text-ink text-sm mb-2">
+                  {perk.title}
+                </h3>
+                <p className="text-ink/60 text-sm leading-relaxed">
+                  {perk.text}
+                </p>
               </div>
             ))}
           </div>

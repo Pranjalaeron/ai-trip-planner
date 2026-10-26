@@ -1,5 +1,5 @@
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -7,27 +7,37 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Node.js
+node_modules/
+dist/
+dist-ssr/
 *.local
 
-# Backend
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
 backend/.env
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+# Backend database and virtual environments
 backend/venv/
+backend/.venv/
 backend/trips.db
 
-# Python
+# Python artifacts (remove if backend is JavaScript-only)
 __pycache__/
 *.py[cod]
 *.sqlite3
-.env
 venv/
+.venv/
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
