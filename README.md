@@ -144,16 +144,3 @@ fullstack-ai-travel-planner
 └── README.md
 ```
 
-
-## 👩‍💻 Author
-
-**Manal Manzoor**
-
-Software Engineering Student  
-COMSATS University Islamabad, Wah Campus
-
-GitHub: https://github.com/manalmanzoor
-
----
-
- If you found this project interesting, consider giving it a star!
