@@ -10,10 +10,16 @@ const PORT = Number(process.env.PORT || 8000);
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"],
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "https://ai-trip-planner-brown-nine.vercel.app",
+      "https://ai-trip-planner-7wl1yieq8-pranjal-aeron-s-projects.vercel.app",
+    ],
     credentials: true,
   }),
 );
+
 app.use(express.json({ limit: "2mb" }));
 
 initDb();
