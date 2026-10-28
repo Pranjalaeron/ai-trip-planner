@@ -1,4 +1,4 @@
-# 🌍 AI Travel Planner
+# 🌍 AI Trip Planner
 
 An AI-powered full-stack travel planner that generates personalized travel itineraries based on your destination, trip duration, interests, and budget. The application combines a modern frontend with AI-powered itinerary generation to help users plan their trips quickly and efficiently.
 
